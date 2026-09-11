@@ -1,115 +1,121 @@
 import express from "express";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const app = express();
 const port = 3000;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 app.use(express.json());
+app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", (req, res) => {
-  res.json({
-    mensagem: "API de Cadastro de Produtos funcionando!",
-    rotas: {
-      cadastrar: "POST /produtos",
-      listar: "GET /produtos",
-      consultar: "GET /produtos/:id",
-      editar: "PUT /produtos/:id",
-      excluir: "DELETE /produtos/:id"
-    }
-  });
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-let produtos = [];
-let proximoId = 1;
+let titulos = [
+  { id: 1, titulo: "Homem de Ferro", tipo: "Filme", genero: "Ação", ano: 2008 },
+  { id: 2, titulo: "Os Vingadores", tipo: "Filme", genero: "Aventura", ano: 2012 },
+  { id: 3, titulo: "Pantera Negra", tipo: "Filme", genero: "Ação", ano: 2018 },
+  { id: 4, titulo: "Guardiões da Galáxia", tipo: "Filme", genero: "Ficção científica", ano: 2014 },
+  { id: 5, titulo: "Loki", tipo: "Série", genero: "Fantasia", ano: 2021 },
+  { id: 6, titulo: "WandaVision", tipo: "Série", genero: "Drama", ano: 2021 },
+  { id: 7, titulo: "Demolidor: Renascido", tipo: "Série", genero: "Ação", ano: 2025 }
+];
+let proximoId = titulos.length + 1;
 
-app.post("/produtos", (req, res) => {
-  const { nome, preco, categoria } = req.body;
+app.post("/titulos", (req, res) => {
+  const { titulo, tipo, genero, ano } = req.body;
 
-  if (!nome || preco === undefined || !categoria) {
+  if (!titulo || !tipo || !genero || ano === undefined) {
     return res.status(400).json({
-      erro: "Nome, preço e categoria são obrigatórios."
+      erro: "Título, tipo, gênero e ano são obrigatórios."
     });
   }
 
-  const novoProduto = {
+  const novoTitulo = {
     id: proximoId,
-    nome,
-    preco,
-    categoria
+    titulo,
+    tipo,
+    genero,
+    ano
   };
 
-  produtos.push(novoProduto);
+  titulos.push(novoTitulo);
   proximoId++;
 
   res.status(201).json({
-    mensagem: "Produto cadastrado com sucesso!",
-    produto: novoProduto
+    mensagem: "Título cadastrado com sucesso!",
+    titulo: novoTitulo
   });
 });
 
-app.get("/produtos", (req, res) => {
-  res.json(produtos);
+app.get("/titulos", (req, res) => {
+  res.json(titulos);
 });
 
-app.get("/produtos/:id", (req, res) => {
+app.get("/titulos/:id", (req, res) => {
   const id = Number(req.params.id);
-  const produto = produtos.find((produto) => produto.id === id);
+  const titulo = titulos.find((titulo) => titulo.id === id);
 
-  if (!produto) {
+  if (!titulo) {
     return res.status(404).json({
-      erro: "Produto não encontrado."
+      erro: "Título não encontrado."
     });
   }
 
-  res.json(produto);
+  res.json(titulo);
 });
 
-app.put("/produtos/:id", (req, res) => {
+app.put("/titulos/:id", (req, res) => {
   const id = Number(req.params.id);
-  const indice = produtos.findIndex((produto) => produto.id === id);
+  const indice = titulos.findIndex((titulo) => titulo.id === id);
 
   if (indice === -1) {
     return res.status(404).json({
-      erro: "Produto não encontrado."
+      erro: "Título não encontrado."
     });
   }
 
-  const { nome, preco, categoria } = req.body;
+  const { titulo, tipo, genero, ano } = req.body;
 
-  if (!nome || preco === undefined || !categoria) {
+  if (!titulo || !tipo || !genero || ano === undefined) {
     return res.status(400).json({
-      erro: "Nome, preço e categoria são obrigatórios."
+      erro: "Título, tipo, gênero e ano são obrigatórios."
     });
   }
 
-  produtos[indice] = {
+  titulos[indice] = {
     id,
-    nome,
-    preco,
-    categoria
+    titulo,
+    tipo,
+    genero,
+    ano
   };
 
   res.json({
-    mensagem: "Produto atualizado com sucesso!",
-    produto: produtos[indice]
+    mensagem: "Título atualizado com sucesso!",
+    titulo: titulos[indice]
   });
 });
 
-app.delete("/produtos/:id", (req, res) => {
+app.delete("/titulos/:id", (req, res) => {
   const id = Number(req.params.id);
-  const indice = produtos.findIndex((produto) => produto.id === id);
+  const indice = titulos.findIndex((titulo) => titulo.id === id);
 
   if (indice === -1) {
     return res.status(404).json({
-      erro: "Produto não encontrado."
+      erro: "Título não encontrado."
     });
   }
 
-  const produtoExcluido = produtos[indice];
-  produtos.splice(indice, 1);
+  const tituloExcluido = titulos[indice];
+  titulos.splice(indice, 1);
 
   res.json({
-    mensagem: "Produto excluído com sucesso!",
-    produto: produtoExcluido
+    mensagem: "Título excluído com sucesso!",
+    titulo: tituloExcluido
   });
 });
 

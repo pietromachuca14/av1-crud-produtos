@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#100b10" />
+    <title>Marvel | Catálogo de filmes e séries</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="/" aria-label="Marvel, início">
+          <span class="brand-mark">M</span>
+          <span>marvel<span class="brand-accent">.</span></span>
+        </a>
+        <div class="sidebar-label">Workspace</div>
+        <nav class="main-nav" aria-label="Navegação principal">
+          <a class="nav-item active" href="#catalogo"><span class="nav-icon">▦</span> Catálogo</a>
+          <a class="nav-item" href="#novo-titulo" id="new-title-link"><span class="nav-icon">＋</span> Novo título</a>
+        </nav>
+        <div class="sidebar-footer">
+          <span class="status-dot"></span>
+          <span>API online</span>
+        </div>
+      </aside>
+
+      <main class="main-content" id="catalogo">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Marvel Studios</p>
+            <h1>Seu universo</h1>
+          </div>
+          <button class="primary-button" id="open-form-button" type="button"><span>＋</span> Adicionar título</button>
+        </header>
+
+        <section class="stats-grid" aria-label="Resumo do catálogo">
+          <article class="stat-card highlight">
+            <span class="stat-label">Títulos cadastrados</span>
+            <strong id="total-titles">0</strong>
+            <span class="stat-note">filmes e séries</span>
+          </article>
+          <article class="stat-card">
+            <span class="stat-label">Filmes</span>
+            <strong id="total-movies">0</strong>
+            <span class="stat-note">longas cadastrados</span>
+          </article>
+          <article class="stat-card">
+            <span class="stat-label">Séries</span>
+            <strong id="total-series">0</strong>
+            <span class="stat-note">séries cadastradas</span>
+          </article>
+        </section>
+
+        <section class="content-panel">
+          <div class="panel-heading">
+            <div>
+              <h2>Todos os títulos</h2>
+              <p>Gerencie os filmes e séries do seu universo Marvel.</p>
+            </div>
+            <label class="search-box">
+              <span aria-hidden="true">⌕</span>
+              <input id="search-input" type="search" placeholder="Buscar filme ou série..." autocomplete="off" />
+            </label>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Título</th><th>Tipo</th><th>Gênero</th><th>Ano</th><th class="actions-heading">Ações</th></tr>
+              </thead>
+              <tbody id="titles-table-body"></tbody>
+            </table>
+            <div class="empty-state" id="empty-state" hidden>
+              <span class="empty-icon">◌</span>
+              <h3>Nenhum título encontrado</h3>
+              <p>Cadastre seu primeiro filme ou série, ou ajuste a busca.</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="modal-backdrop" id="modal-backdrop" hidden>
+      <section class="modal" role="dialog" aria-modal="true" aria-labelledby="form-title">
+        <button class="close-button" id="close-form-button" type="button" aria-label="Fechar">×</button>
+        <p class="eyebrow">Catálogo</p>
+        <h2 id="form-title">Adicionar título</h2>
+        <p class="modal-subtitle">Registre um filme ou uma série no seu catálogo.</p>
+        <form id="title-form">
+          <label>Nome do título<input id="title-input" name="titulo" type="text" placeholder="Ex.: Interestelar" required /></label>
+          <div class="form-row">
+            <label>Tipo<select id="type-input" name="tipo" required><option value="">Selecione</option><option value="Filme">Filme</option><option value="Série">Série</option></select></label>
+            <label>Ano<input id="year-input" name="ano" type="number" min="1888" max="2100" placeholder="Ex.: 2024" required /></label>
+          </div>
+          <label>Gênero<input id="genre-input" name="genero" type="text" placeholder="Ex.: Ficção científica" required /></label>
+          <p class="form-feedback" id="form-feedback" role="alert"></p>
+          <div class="form-actions"><button class="secondary-button" id="cancel-form-button" type="button">Cancelar</button><button class="primary-button" type="submit" id="submit-form-button">Salvar título</button></div>
+        </form>
+      </section>
+    </div>
+    <div class="toast" id="toast" role="status"></div>
+    <script src="/app.js" defer></script>
+  </body>
+</html>
