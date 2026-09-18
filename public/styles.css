@@ -21,6 +21,13 @@ body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-even
 button, input { font: inherit; }
 button { cursor: pointer; }
 .app-shell { display: flex; min-height: 100vh; }
+.login-screen { display: grid; min-height: 100vh; place-items: center; padding: 24px; background: var(--bg); }
+.login-screen[hidden] { display: none; }
+.login-screen:not([hidden]) + .app-shell { display: none; }
+.login-panel { width: min(420px, 100%); padding: 34px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); box-shadow: 0 25px 80px rgba(0, 0, 0, .3); }
+.login-panel h1 { font-size: 34px; }
+.login-panel form { margin-top: 28px; }
+.login-panel .primary-button { width: 100%; }
 .sidebar { width: 232px; padding: 32px 20px 24px; border-right: 1px solid var(--line); display: flex; flex-direction: column; background: rgba(11, 16, 24, 0.85); }
 .brand { display: flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; font: 700 22px var(--font-display); letter-spacing: -1px; }
 .brand-mark { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 5px; color: var(--text); background: var(--cyan); font-size: 16px; line-height: 1; }

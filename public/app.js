@@ -1,80 +1,119 @@
-const state = { titles: [], editingId: null };
+const state = { products: [], editingId: null, token: sessionStorage.getItem("token") };
 
 const elements = {
+  loginScreen: document.querySelector("#login-screen"),
+  loginForm: document.querySelector("#login-form"),
+  loginEmail: document.querySelector("#login-email"),
+  loginPassword: document.querySelector("#login-password"),
+  loginFeedback: document.querySelector("#login-feedback"),
   tableBody: document.querySelector("#titles-table-body"),
   emptyState: document.querySelector("#empty-state"),
   searchInput: document.querySelector("#search-input"),
   modal: document.querySelector("#modal-backdrop"),
-  form: document.querySelector("#title-form"),
+  form: document.querySelector("#product-form"),
   formTitle: document.querySelector("#form-title"),
   formFeedback: document.querySelector("#form-feedback"),
   submitButton: document.querySelector("#submit-form-button"),
-  titleInput: document.querySelector("#title-input"),
-  typeInput: document.querySelector("#type-input"),
-  genreInput: document.querySelector("#genre-input"),
-  yearInput: document.querySelector("#year-input"),
+  nameInput: document.querySelector("#name-input"),
+  categoryInput: document.querySelector("#category-input"),
+  priceInput: document.querySelector("#price-input"),
+  stockInput: document.querySelector("#stock-input"),
   toast: document.querySelector("#toast"),
-  totalTitles: document.querySelector("#total-titles"),
-  totalMovies: document.querySelector("#total-movies"),
-  totalSeries: document.querySelector("#total-series")
+  totalProducts: document.querySelector("#total-titles"),
+  totalCategories: document.querySelector("#total-categories"),
+  totalStock: document.querySelector("#total-stock")
 };
 
 const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
 async function request(url, options = {}) {
-  const response = await fetch(url, { headers: { "Content-Type": "application/json" }, ...options });
+  const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
+  if (state.token) headers.Authorization = `Bearer ${state.token}`;
+  const response = await fetch(url, { ...options, headers });
   const data = await response.json();
   if (!response.ok) throw new Error(data.erro || "Não foi possível completar a operação.");
   return data;
 }
 
-async function loadTitles() {
+async function loadProducts() {
+  if (!state.token) return showLogin();
   try {
-    state.titles = await request("/titulos");
-    renderTitles();
+    state.products = await request("/produtos");
+    renderProducts();
     updateStats();
   } catch (error) {
-    showToast(error.message);
+    if (error.message.includes("Token")) {
+      state.token = null;
+      sessionStorage.removeItem("token");
+      showLogin();
+    } else showToast(error.message);
   }
 }
 
-function renderTitles() {
+function showLogin() {
+  elements.loginScreen.hidden = false;
+  elements.loginPassword.focus();
+}
+
+function hideLogin() {
+  elements.loginScreen.hidden = true;
+}
+
+async function login(event) {
+  event.preventDefault();
+  elements.loginFeedback.textContent = "";
+  try {
+    const data = await request("/login", {
+      method: "POST",
+      body: JSON.stringify({ email: elements.loginEmail.value, senha: elements.loginPassword.value }),
+      headers: {}
+    });
+    state.token = data.token;
+    sessionStorage.setItem("token", state.token);
+    hideLogin();
+    await loadProducts();
+  } catch (error) {
+    elements.loginFeedback.textContent = error.message;
+  }
+}
+
+function renderProducts() {
   const search = elements.searchInput.value.trim().toLowerCase();
-  const filteredTitles = state.titles.filter((title) => `${title.titulo} ${title.tipo} ${title.genero} ${title.ano}`.toLowerCase().includes(search));
-  elements.tableBody.innerHTML = filteredTitles.map((title) => `
+  const filteredProducts = state.products.filter((product) => `${product.nome} ${product.categoria}`.toLowerCase().includes(search));
+  elements.tableBody.innerHTML = filteredProducts.map((product) => `
     <tr>
-      <td>${escapeHtml(title.titulo)}</td>
-      <td><span class="type-tag ${title.tipo === "Série" ? "series" : "movie"}">${escapeHtml(title.tipo)}</span></td>
-      <td>${escapeHtml(title.genero)}</td>
-      <td class="year">${escapeHtml(title.ano)}</td>
+      <td>${escapeHtml(product.nome)}</td>
+      <td><span class="type-tag">${escapeHtml(product.categoria)}</span></td>
+      <td>${currency.format(product.preco)}</td>
+      <td class="year">${escapeHtml(product.estoque)}</td>
       <td>
-        <button class="action-button" data-action="edit" data-id="${title.id}" type="button">Editar</button>
-        <button class="action-button delete" data-action="delete" data-id="${title.id}" type="button">Excluir</button>
+        <button class="action-button" data-action="edit" data-id="${product.id}" type="button">Editar</button>
+        <button class="action-button delete" data-action="delete" data-id="${product.id}" type="button">Excluir</button>
       </td>
     </tr>`).join("");
-  elements.emptyState.hidden = filteredTitles.length > 0;
+  elements.emptyState.hidden = filteredProducts.length > 0;
 }
 
 function updateStats() {
-  elements.totalTitles.textContent = state.titles.length;
-  elements.totalMovies.textContent = state.titles.filter((title) => title.tipo === "Filme").length;
-  elements.totalSeries.textContent = state.titles.filter((title) => title.tipo === "Série").length;
+  elements.totalProducts.textContent = state.products.length;
+  elements.totalCategories.textContent = new Set(state.products.map((product) => product.categoria)).size;
+  elements.totalStock.textContent = state.products.reduce((total, product) => total + product.estoque, 0);
 }
 
-function openForm(title = null) {
-  state.editingId = title?.id || null;
+function openForm(product = null) {
+  state.editingId = product?.id || null;
   elements.form.reset();
-  elements.formTitle.textContent = title ? "Editar título" : "Adicionar título";
-  elements.submitButton.textContent = title ? "Salvar alterações" : "Salvar título";
+  elements.formTitle.textContent = product ? "Editar produto" : "Adicionar produto";
+  elements.submitButton.textContent = product ? "Salvar alterações" : "Salvar produto";
   elements.formFeedback.textContent = "";
-  if (title) {
-    elements.titleInput.value = title.titulo;
-    elements.typeInput.value = title.tipo;
-    elements.genreInput.value = title.genero;
-    elements.yearInput.value = title.ano;
+  if (product) {
+    elements.nameInput.value = product.nome;
+    elements.categoryInput.value = product.categoria;
+    elements.priceInput.value = product.preco;
+    elements.stockInput.value = product.estoque;
   }
   elements.modal.hidden = false;
-  elements.titleInput.focus();
+  elements.nameInput.focus();
 }
 
 function closeForm() {
@@ -82,30 +121,30 @@ function closeForm() {
   state.editingId = null;
 }
 
-async function saveTitle(event) {
+async function saveProduct(event) {
   event.preventDefault();
   const isEditing = Boolean(state.editingId);
-  const payload = { titulo: elements.titleInput.value.trim(), tipo: elements.typeInput.value, genero: elements.genreInput.value.trim(), ano: Number(elements.yearInput.value) };
-  const url = state.editingId ? `/titulos/${state.editingId}` : "/titulos";
+  const payload = { nome: elements.nameInput.value.trim(), categoria: elements.categoryInput.value.trim(), preco: Number(elements.priceInput.value), estoque: Number(elements.stockInput.value) };
+  const url = state.editingId ? `/produtos/${state.editingId}` : "/produtos";
   const method = state.editingId ? "PUT" : "POST";
   elements.formFeedback.textContent = "";
   try {
     await request(url, { method, body: JSON.stringify(payload) });
     closeForm();
-    await loadTitles();
-    showToast(isEditing ? "Título atualizado." : "Título cadastrado.");
+    await loadProducts();
+    showToast(isEditing ? "Produto atualizado." : "Produto cadastrado.");
   } catch (error) {
     elements.formFeedback.textContent = error.message;
   }
 }
 
-async function deleteTitle(id) {
-  const title = state.titles.find((item) => item.id === id);
-  if (!title || !window.confirm(`Excluir ${title.titulo}?`)) return;
+async function deleteProduct(id) {
+  const product = state.products.find((item) => item.id === id);
+  if (!product || !window.confirm(`Excluir ${product.nome}?`)) return;
   try {
-    await request(`/titulos/${id}`, { method: "DELETE" });
-    await loadTitles();
-    showToast("Título excluído.");
+    await request(`/produtos/${id}`, { method: "DELETE" });
+    await loadProducts();
+    showToast("Produto excluído.");
   } catch (error) {
     showToast(error.message);
   }
@@ -123,19 +162,20 @@ function escapeHtml(value) {
 }
 
 document.querySelector("#open-form-button").addEventListener("click", () => openForm());
-document.querySelector("#new-title-link").addEventListener("click", (event) => { event.preventDefault(); openForm(); });
+document.querySelector("#new-product-link").addEventListener("click", (event) => { event.preventDefault(); openForm(); });
 document.querySelector("#close-form-button").addEventListener("click", closeForm);
 document.querySelector("#cancel-form-button").addEventListener("click", closeForm);
 elements.modal.addEventListener("click", (event) => { if (event.target === elements.modal) closeForm(); });
-elements.form.addEventListener("submit", saveTitle);
-elements.searchInput.addEventListener("input", renderTitles);
+elements.form.addEventListener("submit", saveProduct);
+elements.loginForm.addEventListener("submit", login);
+elements.searchInput.addEventListener("input", renderProducts);
 elements.tableBody.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-action]");
   if (!button) return;
   const id = Number(button.dataset.id);
-  if (button.dataset.action === "edit") openForm(state.titles.find((title) => title.id === id));
-  if (button.dataset.action === "delete") deleteTitle(id);
+  if (button.dataset.action === "edit") openForm(state.products.find((product) => product.id === id));
+  if (button.dataset.action === "delete") deleteProduct(id);
 });
 document.addEventListener("keydown", (event) => { if (event.key === "Escape" && !elements.modal.hidden) closeForm(); });
 
-loadTitles();
+loadProducts();

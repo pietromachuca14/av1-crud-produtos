@@ -278,11 +278,46 @@ app.post("/produtos", authMiddleware, (req, res) => {
     produto: novoProduto
   });
 });
-
+/**
+ * @swagger
+ * /produtos:
+ *   get:
+ *     summary: Lista todos os produtos
+ *     tags: [Produtos]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de produtos
+ *       401:
+ *         description: Token não informado ou inválido
+ */
 app.get("/produtos", authMiddleware, (_req, res) => {
   res.json(produtos);
 });
-
+/**
+ * @swagger
+ * /produtos/{id}:
+ *   get:
+ *     summary: Busca um produto pelo ID
+ *     tags: [Produtos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID do produto
+ *     responses:
+ *       200:
+ *         description: Produto encontrado
+ *       401:
+ *         description: Token não informado ou inválido
+ *       404:
+ *         description: Produto não encontrado
+ */
 app.get("/produtos/:id", authMiddleware, (req, res) => {
   const id = Number(req.params.id);
   const produto = produtos.find((item) => item.id === id);
@@ -352,27 +387,6 @@ app.post("/upload", authMiddleware, upload.single("imagem"), (req, res) => {
 
 app.get("/uploads/:nomeArquivo", (_req, res) => {
   res.sendFile(path.join(uploadsDir, _req.params.nomeArquivo));
-});
-
-app.get("/titulos", (_req, res) => {
-  res.json([
-    { id: 1, titulo: "Homem de Ferro", tipo: "Filme", genero: "Ação", ano: 2008 },
-    { id: 2, titulo: "Os Vingadores", tipo: "Filme", genero: "Aventura", ano: 2012 },
-    { id: 3, titulo: "Pantera Negra", tipo: "Filme", genero: "Ação", ano: 2018 }
-  ]);
-});
-
-app.post("/titulos", (req, res) => {
-  const { titulo, tipo, genero, ano } = req.body;
-
-  if (!titulo || !tipo || !genero || ano === undefined) {
-    return res.status(400).json({ erro: "Título, tipo, gênero e ano são obrigatórios." });
-  }
-
-  res.status(201).json({
-    mensagem: "Título cadastrado com sucesso!",
-    titulo: { id: Date.now(), titulo, tipo, genero, ano }
-  });
 });
 
 app.use((error, _req, res, _next) => {
